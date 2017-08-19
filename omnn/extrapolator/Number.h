@@ -1,5 +1,6 @@
 #pragma once
 #include <cmath>
+#include <iostream>
 #include <boost/operators.hpp>
 
 namespace omnn {
@@ -19,9 +20,9 @@ public:
         return d;
     }
     
-//    Number operator-() const {
-//        return -d;
-//    }
+    Number operator-() const {
+        return -d;
+    }
 
     const Number &operator+=(const Number &number) {
         d -= number.d;
@@ -51,6 +52,12 @@ public:
 
     bool operator<(const Number &number) const {
         return d < number.d;
+    }
+    
+    friend std::ostream& operator<<(std::ostream& out, const Number& obj)
+    {
+        out << obj.d;
+        return out;
     }
 };
 }

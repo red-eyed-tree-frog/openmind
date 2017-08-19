@@ -10,6 +10,7 @@
 #include <type_traits>
 #include "Expression.h"
 #include "Number.h"
+#include <Eigen/Dense>
 #include <boost/numeric/ublas/matrix.hpp>
 #include <boost/numeric/ublas/lu.hpp>
 
@@ -19,37 +20,38 @@ namespace extrapolator{
 namespace ublas = boost::numeric::ublas;
 
 
-Number det_fast(ublas::matrix<Number> matrix)
-{
-    ublas::permutation_matrix<std::size_t> pivots(matrix.size1());
+    
+//Number det_fast(ublas::matrix<Number> matrix)
+//{
+//    ublas::permutation_matrix<std::size_t> pivots(matrix.size1());
+//
+//    auto isSingular = ublas::lu_factorize(matrix, pivots);
+//    if (isSingular)
+//        return static_cast<Number>(0);
+//
+//    Number det = static_cast<Number>(1);
+//    for (std::size_t i = 0; i < pivots.size(); ++i)
+//    {
+//        if (pivots(i) != i)
+//            det *= static_cast<Number>(-1);
+//
+//        det *= matrix(i, i);
+//    }
+//
+//    return det;
+//}
 
-    auto isSingular = ublas::lu_factorize(matrix, pivots);
-    if (isSingular)
-        return static_cast<Number>(0);
-
-    Number det = static_cast<Number>(1);
-    for (std::size_t i = 0; i < pivots.size(); ++i)
-    {
-        if (pivots(i) != i)
-            det *= static_cast<Number>(-1);
-
-        det *= matrix(i, i);
-    }
-
-    return det;
-}
-
-using extrapolator_base_matrix = boost::numeric::ublas::matrix<int>;
+using extrapolator_base_matrix = Eigen::Matrix<Number, Eigen::Dynamic, Eigen::Dynamic>;
 
 
 class Extrapolator
-        : public ublas::matrix<Number>
+        : public extrapolator_base_matrix
 {
     using T = Number;
-    using base = ublas::matrix<Number>;
+    using base = extrapolator_base_matrix;
     
-    using solution_t = typename ublas::matrix_vector_solve_traits<base, ublas::vector<T>>::result_type;
-
+    //using solution_t = typename ublas::matrix_vector_solve_traits<base, ublas::vector<T>>::result_type;
+    using solution_t = Eigen::Vector3f;
     solution_t solution;
 
 public:
@@ -75,29 +77,38 @@ public:
 
     }
 
-    solution_t Solve(const ublas::vector<T>& augment){
-        solution = ublas::solve(*this, augment, ublas::upper_tag());
-        return solution;
+    auto Solve(const ublas::vector<T>& augment){
+        auto n = rows();
+        extrapolator_base_matrix a(n, 1);
+        for (int i = 0; i < n; ++i) {
+            a(i)=augment[i];
+        }
+//        for(auto item : augment) {
+//            a << item;
+//        }
+        auto solution = this->llt().solve(a);
+        return solution.rhs();
     }
 
     T Determinant()
     {
-        ublas::permutation_matrix<std::size_t> pivots(this->size1());
-        auto mLu = *this;
-        auto isSingular = ublas::lu_factorize(mLu, pivots);
-        if (isSingular)
-            return static_cast<T>(0);
-
-        T det = static_cast<T>(1);
-        for (std::size_t i = 0; i < pivots.size(); ++i)
-        {
-            if (pivots(i) != i)
-                det *= static_cast<T>(-1);
-
-            det *= mLu(i, i);
-        }
-
-        return det;
+        return this->determinant();
+//        ublas::permutation_matrix<std::size_t> pivots(this->size1());
+//        auto mLu = *this;
+//        auto isSingular = ublas::lu_factorize(mLu, pivots);
+//        if (isSingular)
+//            return static_cast<T>(0);
+//
+//        T det = static_cast<T>(1);
+//        for (std::size_t i = 0; i < pivots.size(); ++i)
+//        {
+//            if (pivots(i) != i)
+//                det *= static_cast<T>(-1);
+//
+//            det *= mLu(i, i);
+//        }
+//
+//        return det;
 
     }
 
@@ -130,18 +141,18 @@ public:
      * @param e expression with known varable values INCLUDING ZEROS
      * @return expression with additional deducted variables
      */
-    template<template <class> class RawContainerT>
-    Expression Complete(const RawContainerT<T>& data) {
-        // search for the row
-        auto it1 = this->begin1();
-        for (; it1 != this->end1(); ++it1) {
-            if (std::equal(data.begin(), data.end(), it1.begin())) {
-                break; // found it1
-            }
-        }
-
-
-    }
+//    template<template <class> class RawContainerT>
+//    Expression Complete(const RawContainerT<T>& data) {
+//        // search for the row
+//        auto it1 = this->begin1();
+//        for (; it1 != this->end1(); ++it1) {
+//            if (std::equal(data.begin(), data.end(), it1.begin())) {
+//                break; // found it1
+//            }
+//        }
+//
+//
+//    }
 
     
 };

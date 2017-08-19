@@ -49,7 +49,13 @@ BOOST_AUTO_TEST_CASE(Extrapolator_test)
     augment[1] = 1;
     augment[2] = -1;
     augment[3] = -1;
-    auto r = e_verticals.Solve(augment);
+    auto roots = e_verticals.Solve(augment);
+    std::vector<Number> r;
+    BOOST_TEST(roots.rows() == e_verticals.cols());
+    BOOST_TEST(roots.cols() == 1);
+    for (int i = 0; i < roots.rows(); ++i) {
+        r.push_back(roots(i));
+    }
     
     BOOST_TEST(r[0] * 1 + r[1] * -1 + r[2] * 1 + r[3] * -1 == 1);
     BOOST_TEST(r[0] * -1 + r[1] * 1 + r[2] * -1 + r[3] * 1 == 1);

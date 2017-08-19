@@ -7,6 +7,7 @@ else()
 	set(_IS_DEBUG FALSE)
 endif()
 
+option(OPENMIND_BUILD_PROGRAMS "Build various programs" ${_IS_DEBUG})
 option(OPENMIND_BUILD_SAMPLES "Build various samples" ${_IS_DEBUG})
 option(OPENMIND_BUILD_TESTS "Build various TESTS" ${_IS_DEBUG})
 
@@ -44,3 +45,6 @@ if(${OPENMIND_BUILD_SAMPLES})
     add_subdirectory(Examples/opengl-rt-laby)
 ENDIF()
 
+if(${OPENMIND_BUILD_PROGRAMS})
+    add_subdirectory(Programs)
+endif()
